@@ -8,17 +8,19 @@ namespace TupleTest
     {
         static void Main(string[] args)
         {
-            for(int i = 0; i < 10; i++)
+            int iterations = 1000;
+            for (int i = 0; i < iterations; i++)
             {
-                RunDelegate();
-                RunTuple();
+                RunDelegate(i == 0);
+                RunTuple(i == 0);
             }
+
+            File.AppendAllText("log.txt", "Delegate avg: " + (sumDelegate / (iterations - 1)) + Environment.NewLine);
+            File.AppendAllText("log.txt", "Tuple avg: " + (sumTuple / (iterations - 1)) + Environment.NewLine);
         }
 
-        private static void RunDelegate()
+        private static void RunDelegate(bool firstRun)
         {
-            var arrayDelegate = new double[1000000];
-
             Action DelegateCalc(Tuple<int, int> range)
             {
                 return () =>
@@ -30,19 +32,19 @@ namespace TupleTest
                 };
             }
 
-            myStopwatch.Restart();
+            stopwatch.Restart();
 
             ParallelRunner.Run(DelegateCalc, arrayDelegate.Length);
 
-            File.AppendAllText("log.txt", "Delegate: " + myStopwatch.ElapsedTicks + Environment.NewLine);
+            if (!firstRun)
+            {
+                sumDelegate += stopwatch.ElapsedTicks;
+            }
+            File.AppendAllText("log.txt", "Delegate: " + stopwatch.ElapsedTicks + Environment.NewLine);
         }
 
-        private static void RunTuple()
+        private static void RunTuple(bool firstRun)
         {
-            var arrayTuple = new double[1000000];
-
-            myStopwatch.Restart();
-
             void TupleCalc(Tuple<int, int> range)
             {
                 for (int i = range.Item1; i < range.Item2; i++)
@@ -51,11 +53,21 @@ namespace TupleTest
                 }
             }
 
+            stopwatch.Restart();
+
             ParallelRunner.Run(TupleCalc, arrayTuple.Length);
 
-            File.AppendAllText("log.txt", "Tuple: " + myStopwatch.ElapsedTicks + Environment.NewLine);
+            if (!firstRun)
+            {
+                sumTuple += stopwatch.ElapsedTicks;
+            }
+            File.AppendAllText("log.txt", "Tuple: " + stopwatch.ElapsedTicks + Environment.NewLine);
         }
 
-        private static readonly Stopwatch myStopwatch = new Stopwatch();
+        private static readonly Stopwatch stopwatch = new Stopwatch();
+        private static readonly double[] arrayDelegate = new double[1000000];
+        private static readonly double[] arrayTuple = new double[1000000];
+        private static double sumDelegate = 0;
+        private static double sumTuple = 0;
     }
 }
