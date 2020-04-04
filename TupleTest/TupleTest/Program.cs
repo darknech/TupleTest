@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace TupleTest
 {
@@ -13,10 +14,12 @@ namespace TupleTest
             {
                 RunDelegate(i == 0);
                 RunTuple(i == 0);
+                RunFor(i == 0);
             }
 
             File.AppendAllText("log.txt", "Delegate avg: " + (sumDelegate / (iterations - 1)) + Environment.NewLine);
             File.AppendAllText("log.txt", "Tuple avg: " + (sumTuple / (iterations - 1)) + Environment.NewLine);
+            File.AppendAllText("log.txt", "For avg: " + (sumFor / (iterations - 1)) + Environment.NewLine);
         }
 
         private static void RunDelegate(bool firstRun)
@@ -64,10 +67,28 @@ namespace TupleTest
             File.AppendAllText("log.txt", "Tuple: " + stopwatch.ElapsedTicks + Environment.NewLine);
         }
 
+        private static void RunFor(bool firstRun)
+        {
+            stopwatch.Restart();
+
+            Parallel.For(0, arrayFor.Length,
+               i => {
+                   arrayFor[i] = Math.Pow(i, 2);
+               });
+
+            if (!firstRun)
+            {
+                sumFor += stopwatch.ElapsedTicks;
+            }
+            File.AppendAllText("log.txt", "For: " + stopwatch.ElapsedTicks + Environment.NewLine);
+        }
+
         private static readonly Stopwatch stopwatch = new Stopwatch();
         private static readonly double[] arrayDelegate = new double[1000000];
         private static readonly double[] arrayTuple = new double[1000000];
+        private static readonly double[] arrayFor = new double[1000000];
         private static double sumDelegate = 0;
         private static double sumTuple = 0;
+        private static double sumFor = 0;
     }
 }
